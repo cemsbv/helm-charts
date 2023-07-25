@@ -1,15 +1,22 @@
+{{- $fullName := include "api.fullname" . -}}
+{{- $labels := include "api.labels" . -}}
+{{- $selectorLabels:= include "api.selectorLabels" . -}}
+
+{{- range $.Values.endpoints }}
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "api.fullname" . }}
+  name: {{ $fullName }}-{{ .name }}
   labels:
-    {{- include "api.labels" . | nindent 4 }}
+    {{- $labels }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ (.service).type | default "ClusterIp" }}
   ports:
-    - port: {{ .Values.service.port }}
+    - port: {{ .port | default "80" }}
       targetPort: http
       protocol: TCP
       name: http
   selector:
-    {{- include "api.selectorLabels" . | nindent 4 }}
+    {{- $selectorLabels }}
+{{- end }}
