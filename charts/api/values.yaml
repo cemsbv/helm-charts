@@ -8,13 +8,10 @@ fullnameOverride: ""
 endpoints:
   - name: v1
 
-    # Ingress route after base URL, for example: `crux-nuclei.com/api/vibracore/v1`, where `v1` is the path.
+    # Ingress route after base URL, for example: `crux-nuclei.com/api/vibracore/v1`, where `api/vibracore/v1` is the path.
     path: v1
 
     port: 80
-
-    service:
-      type: ClusterIP
 
     image:
       repository: nginx
@@ -40,6 +37,10 @@ endpoints:
       # runAsNonRoot: true
       # runAsUser: 1000
 
+service:
+  type: ClusterIP
+  port: 80
+
 imagePullSecrets: []
 
 autoscaling:
@@ -64,26 +65,6 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
-
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  pathPrefix: ""
-
-  hosts:
-    - "chart-example.local"
-
-  className: ""
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
 
 nodeSelector: {}
 
