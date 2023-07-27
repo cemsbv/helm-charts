@@ -37,6 +37,15 @@ endpoints:
       # runAsNonRoot: true
       # runAsUser: 1000
 
+    env: {}
+      # API_PORT will be generated and set
+
+    args: {}
+
+    command: {}
+
+    disableRedis: false
+
 service:
   type: ClusterIP
   port: 80

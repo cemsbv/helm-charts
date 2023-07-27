@@ -42,16 +42,16 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
-        {{- range .Values.endpoints }}
+        {{- range $index, $endpoint := .Values.endpoints }}
         - name: {{ $fullName }}-{{ .name }}
+          {{- if .securityContext }}
           securityContext:
-            {{- toYaml .securityContext | default "{}" | nindent 12 }}
+            {{- toYaml .securityContext | nindent 12 }}
+          {{- end }}
           image: "{{ .image.repository }}:{{ .image.tag | default "latest" }}"
           imagePullPolicy: {{ .image.pullPolicy | default "Always" }}
           ports:
-            - name: http
-              containerPort: {{ .port | default "80" }}
-              protocol: TCP
+            - containerPort: {{ .port | default "80" }}
           livenessProbe:
             httpGet:
               path: /
@@ -60,9 +60,47 @@ spec:
             httpGet:
               path: /
               port: http
+          {{- if .resources }}
           resources:
-            {{- toYaml .resources | default "{}" | nindent 12 }}
-        {{- end}}
+            {{- toYaml .resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: API_PORT 
+              value: "{{ add $index 15170 }}"
+          {{- if .disableRedis }} {{ else }}
+            - name: REDIS_HOST
+              value: "localhost"
+            - name: REDIS_PORT
+              value: "{{ add $index 14620 }}"
+            - name: REDIS_DB
+              value: "0"
+          {{- end }}
+          {{- if .env }}
+            {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          {{- if .command }}
+          command:
+            {{- toYaml .command | nindent 12  }}
+          {{- end }}
+          {{- if .args }}
+          args:
+            {{- toYaml .args | nindent 12  }}
+          {{- end }}
+      {{- if .disableRedis }} {{ else }}
+        - name: {{ $fullName }}-{{ .name }}-redis
+          image: "redis:7"
+          ports:
+            - containerPort: {{ add $index 14620 }}
+          env:
+            - name: MASTER
+              value: "true"
+          command: ["redis-server"]
+          args: ["-p", {{ add $index 14620 | quote }}]
+          volumes:
+            - mountPath: /redis-master-data
+              name: {{ $fullName }}-{{ .name }}-redis-data
+      {{- end}}
+      {{- end}}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -76,6 +114,12 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-      - name: nginx-proxy-config-volume
-        configMap:
-          name: {{ $fullName }}-nginx-conf
+        - name: nginx-proxy-config-volume
+          configMap:
+            name: {{ $fullName }}-nginx-conf
+      {{- range $index, $endpoint := .Values.endpoints }}
+      {{- if .disableRedis }} {{ else }}
+        - name: {{ $fullName }}-{{ .name }}-redis-data
+          emptyDir: {}
+      {{- end }}
+      {{- end }}
