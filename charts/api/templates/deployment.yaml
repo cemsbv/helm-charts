@@ -30,6 +30,18 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
+        - name: {{ $fullName }}-nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-proxy-config-volume
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
         {{- range .Values.endpoints }}
         - name: {{ $fullName }}-{{ .name }}
           securityContext:
@@ -63,3 +75,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+      - name: nginx-proxy-config-volume
+        configMap:
+          name: {{ $fullName }}-nginx-conf
