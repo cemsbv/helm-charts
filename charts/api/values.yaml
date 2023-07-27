@@ -11,10 +11,9 @@ endpoints:
     # Ingress route after base URL, for example: `crux-nuclei.com/api/vibracore/v1`, where `api/vibracore/v1` is the path.
     path: v1
 
-    port: 80
-
     image:
       repository: nginx
+      tag: latest
       pullPolicy: Always
 
     resources: {}
@@ -39,12 +38,27 @@ endpoints:
 
     env: {}
       # API_PORT will be generated and set
+      # WORKER_PORT will be generated and set if worker is set
 
     args: {}
 
     command: {}
 
     disableRedis: false
+
+    # worker:
+    #   name: worker
+    #   image: # Remove to use parent image
+    #     repository: nginx
+    #     tag: latest
+    #     pullPolicy: Always
+    #   resources: {}
+    #   securityContext: {}
+    #   env: {}
+    #     # WORKER_PORT will be generated and set
+    #   args: {}
+    #   command: {}
+    #   disableRedis: false
 
 service:
   type: ClusterIP
