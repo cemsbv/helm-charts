@@ -42,10 +42,10 @@ spec:
             - name: nginx-proxy-config-volume
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
+          {{- if (.Values.nginx).resources }}
           resources:
-            requests:
-              cpu: 10m
-              memory: 50Mi
+            {{- toYaml .Values.nginx.resources | nindent 12 }}
+          {{- end }}
         {{- range $index, $endpoint := .Values.endpoints }}
           {{- $name := (printf "%s-%s" $fullName .name) }}
           {{- $apiPort := (add $apiPortRange $index) }}
@@ -78,13 +78,13 @@ spec:
             - name: WORKER_PORT 
               value: "{{ $workerPort }}"
           {{- end }}
-          {{- if .disableRedis }} {{ else }}
+          {{- with .redis }}
             - name: REDIS_HOST
               value: "localhost"
             - name: REDIS_PORT
-              value: "{{ $redisPort }}"
+              value: {{ $redisPort | quote }}
             - name: REDIS_DB
-              value: "0"
+              value: {{ .db | default "0" | quote }}
           {{- end }}
           {{- if .env }}
             {{- toYaml .env | nindent 12 }}
@@ -97,7 +97,7 @@ spec:
           args:
             {{- toYaml .args | nindent 12  }}
           {{- end }}
-      {{- if .disableRedis }} {{ else }}
+      {{- with .redis }}
         - name: {{ $name }}-redis
           image: "redis:7"
           ports:
@@ -106,14 +106,19 @@ spec:
             - name: MASTER
               value: "true"
           command: ["redis-server"]
-          args: ["-p", {{ $redisPort | quote }}]
-          volumes:
-            - mountPath: /redis-master-data
-              name: {{ $fullName }}-{{ .name }}-redis-data
+          args: ["--port", {{ $redisPort | quote }}]
+          volumeMounts:
+          - mountPath: /redis-master-data
+            name: {{ $name }}-redis-data
+          {{- if .resources }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- end }}
       {{- end}}
       {{- with .worker }}
         {{- $workerFullName := (printf "%s-%s" $name (.name | default "worker")) }}
         - name: {{ $workerFullName }}
+          image: "{{ .image.repository }}:{{ .image.tag | default "latest" }}"
           {{- if .securityContext }}
           securityContext:
             {{- toYaml .securityContext | nindent 12 }}
@@ -132,14 +137,14 @@ spec:
           {{- end }}
           env:
             - name: WORKER_PORT 
-              value: "{{ $workerPort }}"
-          {{- if .disableRedis }} {{ else }}
+              value: {{ $workerPort | quote }}
+          {{- with .redis }}
             - name: REDIS_HOST
               value: "localhost"
             - name: REDIS_PORT
-              value: "{{ $workerRedisPort }}"
+              value: {{ $workerRedisPort | quote }}
             - name: REDIS_DB
-              value: "0"
+              value: {{ .db | default "0" | quote }}
           {{- end }}
           {{- if .env }}
             {{- toYaml .env | nindent 12 }}
@@ -152,7 +157,7 @@ spec:
           args:
             {{- toYaml .args | nindent 12  }}
           {{- end }}
-      {{- if .disableRedis }} {{ else }}
+      {{- with .redis }}
         - name: {{ $workerFullName }}-redis
           image: "redis:7"
           ports:
@@ -161,10 +166,14 @@ spec:
             - name: MASTER
               value: "true"
           command: ["redis-server"]
-          args: ["-p", {{ $workerRedisPort | quote }}]
-          volumes:
+          args: ["--port", {{ $workerRedisPort | quote }}]
+          volumeMounts:
             - mountPath: /redis-master-data
               name: {{ $workerFullName }}-redis-data
+          {{- if .resources }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- end }}
       {{- end}}
       {{- end}}
       {{- end}}
@@ -187,7 +196,7 @@ spec:
       {{- range $index, $endpoint := .Values.endpoints }}
         {{- $name := (printf "%s-%s" $fullName .name) }}
 
-        {{- if .disableRedis }} {{ else }}
+        {{- if .redis }}
         - name: {{ $name }}-redis-data
           emptyDir: {}
         {{- end }}
@@ -195,7 +204,7 @@ spec:
         {{- with .worker }}
           {{- $workerFullName := (printf "%s-%s" $name (.name | default "worker")) }}
 
-          {{- if .disableRedis }} {{ else }}
+          {{- if .redis }}
         - name: {{ $workerFullName }}-redis-data
           emptyDir: {}
           {{- end }}
