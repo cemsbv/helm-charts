@@ -52,6 +52,8 @@ spec:
           {{- $redisPort := (add $redisPortRange $index) }}
           {{- $workerPort := (add $workerPortRange $index) }}
           {{- $workerRedisPort := (add $workerRedisPortRange $index) }}
+          {{- $env := .env }}
+          {{- $redis := .redis }}
         - name: {{ $name }}
           {{- if .securityContext }}
           securityContext:
@@ -59,14 +61,8 @@ spec:
           {{- end }}
           image: "{{ .image.repository }}:{{ .image.tag | default "latest" }}"
           imagePullPolicy: {{ .image.pullPolicy | default "Always" }}
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
+          ports:
+            - containerPort: {{ $apiPort }}
           {{- if .resources }}
           resources:
             {{- toYaml .resources | nindent 12 }}
@@ -101,7 +97,7 @@ spec:
         - name: {{ $name }}-redis
           image: "redis:7"
           ports:
-            - containerPort: {{ add $index 14620 }}
+            - containerPort: {{ $redisPort }}
           env:
             - name: MASTER
               value: "true"
@@ -119,18 +115,12 @@ spec:
         {{- $workerFullName := (printf "%s-%s" $name (.name | default "worker")) }}
         - name: {{ $workerFullName }}
           image: "{{ .image.repository }}:{{ .image.tag | default "latest" }}"
+          ports:
+            - containerPort: {{ $workerPort }}
           {{- if .securityContext }}
           securityContext:
             {{- toYaml .securityContext | nindent 12 }}
           {{- end }}
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
           {{- if .resources }}
           resources:
             {{- toYaml .resources | nindent 12 }}
@@ -138,16 +128,26 @@ spec:
           env:
             - name: WORKER_PORT 
               value: {{ $workerPort | quote }}
-          {{- with .redis }}
+          {{- if .redis }}
             - name: REDIS_HOST
               value: "localhost"
             - name: REDIS_PORT
               value: {{ $workerRedisPort | quote }}
             - name: REDIS_DB
-              value: {{ .db | default "0" | quote }}
+              value: {{ .redis.db | default "0" | quote }}
+          {{- else if $redis }}
+            - name: REDIS_HOST
+              value: "localhost"
+            - name: REDIS_PORT
+              value: {{ $redisPort | quote }}
+            - name: REDIS_DB
+              value: {{ $redis.db | default "0" | quote }}
           {{- end }}
           {{- if .env }}
             {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          {{- if $env }}
+            {{- toYaml $env | nindent 12 }}
           {{- end }}
           {{- if .command }}
           command:
