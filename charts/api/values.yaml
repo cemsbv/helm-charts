@@ -44,7 +44,12 @@ endpoints:
 
     command: {}
 
-    disableRedis: false
+    redis:
+      db: 0
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi
 
     # worker:
     #   name: worker
@@ -59,6 +64,11 @@ endpoints:
     #   args: {}
     #   command: {}
     #   disableRedis: false
+      # redis:
+      #   resources:
+      #     requests:
+      #       cpu: 10m
+      #       memory: 50Mi
 
 service:
   type: ClusterIP
@@ -94,3 +104,9 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+nginx:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 50Mi
