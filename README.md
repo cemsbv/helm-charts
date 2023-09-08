@@ -7,13 +7,21 @@ helm repo add cems https://cemsbv.github.io/helm-charts/
 helm repo update
 ```
 
+## Test
+
+```sh
+helm template charts/api  --debug
+```
+
 ## Locally
 
 Install dependencies:
 
 - [ChartMuseum](https://github.com/helm/chartmuseum)
-- servecm plugin: `helm plugin install https://github.com/jdolitsky/helm-servecm`
-- push plugin: `helm plugin install https://github.com/chartmuseum/helm-push.git`
+- servecm plugin:
+  `helm plugin install https://github.com/jdolitsky/helm-servecm`
+- push plugin:
+  `helm plugin install https://github.com/chartmuseum/helm-push.git`
 
 Run server:
 
