@@ -85,6 +85,8 @@ autoscaling:
 
 replicaCount: 1
 
+prometheusScrape: false
+
 podAnnotations: {}
 
 podSecurityContext: {}
