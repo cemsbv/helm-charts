@@ -14,12 +14,14 @@ data:
       worker_connections 1024;
     }
     http {
+      client_max_body_size 0;
+      request-body-size-limit 0;
+      proxy-body-size 0;
       server {
         listen 80;
         {{- range $index, $endpoint := .Values.endpoints }}
         {{- $apiPort := (add $apiPortRange $index) }}
-        location /{{ .path }}/ {
-          client_max_body_size 0;
+        location /{{ .path }}/ {         
           proxy_pass http://127.0.0.1:{{ $apiPort | default "80" }};
         }
         {{- end }}
