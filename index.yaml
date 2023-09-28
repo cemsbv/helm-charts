@@ -2,6 +2,18 @@ apiVersion: v1
 entries:
   api:
   - apiVersion: v2
+    created: "2023-09-28T13:22:46.559227601Z"
+    description: CEMS microservice API running with multiple simultaneous versions
+    digest: ce90311c4664bda7dc26df4f5322d9f5c943d31241e47cc11bea91f155db58b3
+    maintainers:
+    - email: t.versteeg@cemsbv.io
+      name: tversteeg
+    name: api
+    type: application
+    urls:
+    - https://github.com/cemsbv/helm-charts/releases/download/api-0.2.3/api-0.2.3.tgz
+    version: 0.2.3
+  - apiVersion: v2
     created: "2023-09-11T13:33:38.855014642Z"
     description: CEMS microservice API running with multiple simultaneous versions
     digest: b393de788b330ee0647043264ae4d6a84b3bd3a3b39de264198cc72a072c9239
@@ -61,4 +73,4 @@ entries:
     urls:
     - https://github.com/cemsbv/helm-charts/releases/download/api-0.1.2/api-0.1.2.tgz
     version: 0.1.2
-generated: "2023-09-11T13:33:38.855034742Z"
+generated: "2023-09-28T13:22:46.559404705Z"
